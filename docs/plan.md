@@ -93,27 +93,23 @@ Item     { id, building_id, title, due_at?, state: "open"|"snoozed"|"fixed",
 
 Each milestone ends with a short **Check** (see "Verification" below).
 
-### Before M0: needed from Parth
+### Setup by milestone
 
-Already in place: Node 24, pnpm 11, Codex CLI 0.171.
+The code lives at the root of `bot-life`. M1 starts with seeded fixtures and can run before M0's live check.
 
-| # | What | Needed by |
-|---|---|---|
-| 1 | Install the OpenMausBot desktop app and finish its onboarding | M0 |
-| 2 | Sign Codex in (`codex login`, ChatGPT account or API key) and pick Codex as the engine in OpenMausBot | M0 |
-| 3 | Decide which Gmail account to connect (your own or a throwaway test account) and complete the Composio browser login for it | M0 |
-| 4 | Composio: use OpenMausBot's built-in managed service, or paste your own project key (`ak_…`) | M0 |
-| 5 | Confirm the code lives in `life-town/` inside this repo (fresh history), or name a new repo | M1 |
-| 6 | Copy over from claude-clan: `packages/layout` and the HUD styles/components from `apps/web` (or say I can read the repo directly) | M2 |
-| 7 | Get the colorfigures skill installed (check its licence and whether it's free) | M3 |
-| 8 | Calendar and Drive Composio logins | M5 |
-| 9 | iMessage: give the MCP host Full Disk Access and Automation access to Messages | M6 |
+| What | Needed by |
+|---|---|
+| Install and onboard OpenMausBot, sign in to Codex, and select Codex as the engine | M0 live check |
+| Provide access to the claude-clan layout and HUD references | M2 |
+| Provide access to the colorfigures skill and check its license | M3 |
+| Choose a Gmail account and a managed or custom Composio project, then connect Gmail in OpenMausBot. Calendar and Drive can be connected when their flows are exercised. | M5 |
+| Grant the iMessage MCP host Full Disk Access and Automation access to Messages | M6 |
 
 ### M0: Harness spike (half a day)
-- Install OpenMausBot, set the Codex engine, connect Gmail via Composio.
+
 - Map the harness API from OpenMausBot's own `src/` client: send a message to a bot, read a thread, answer an approval, start a connector login, subscribe to `/api/events` (stream-ticket auth).
-- Register a throwaway MCP server and confirm a bot can call it.
 - Write `docs/city/harness-contract.md`.
+- Install OpenMausBot, set the Codex engine, and register a test MCP server.
 - **Check:** one script sends a message to a bot, receives the SSE reply, and sees the bot call the test MCP tool.
 
 ### M1: town-server + contract
