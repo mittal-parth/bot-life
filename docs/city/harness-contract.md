@@ -31,3 +31,14 @@ node --experimental-eventsource scripts/m0/smoke.mjs BOT_ID THREAD_ID
 ```
 
 Set `OMB_PORT` if the desktop uses a different loopback port and `OPENMAUSBOT_TOKEN` if the harness requires pairing. The script sends one synthetic request, waits up to two minutes, and succeeds when the bot's text on that thread contains the random receipt returned by the probe. If a permission card appears, review the tool call in the desktop app. Gmail access is independent of this check.
+
+## Check the Streamable HTTP town server
+
+1. Install [OpenMausBot](https://github.com/milind-soni/OpenMausBot/releases/latest), sign in to Codex, and create or choose a test bot with the Codex engine.
+2. From this repo, run `pnpm install` and start a disposable town with `TOWN_DB=:memory: pnpm start`.
+3. Add `http://127.0.0.1:4310/mcp` as a Streamable HTTP server named `town` and grant the test bot access. Approve the test tool call in OpenMausBot if it asks.
+4. Run `pnpm smoke:omb <bot-id> <thread-id>`. If your harness uses another port, set `OMB_PORT`. If it requires a paired session, set `OMB_SESSION_TOKEN` locally.
+
+The script sends one test message, waits for the matching bot reply on the harness SSE stream, and checks that a uniquely named building appeared in the disposable town. Gmail and Composio can stay disconnected for this check.
+
+This separate check exercises the actual town store and is pending on the desktop installation.
