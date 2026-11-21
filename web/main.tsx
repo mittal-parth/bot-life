@@ -56,7 +56,8 @@ function App() {
   const [reference, setReference] = useState<number>();
   const [status, setStatus] = useState("");
   const [selected, setSelected] = useState<string>();
-  const [view, setView] = useState<"map" | "directory">("map");
+  const [panel, setPanel] = useState<"ledger" | "directory" | "building">();
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [filter, setFilter] = useState("all");
   const [retry, setRetry] = useState(0);
@@ -66,6 +67,7 @@ function App() {
     history.replaceState(null, "", url);
     const abort = new AbortController();
     let events: EventSource | undefined;
+    setPanel(undefined);
     setTown(null);
     setSelected(undefined);
     setStatus("Loading town…");
@@ -128,14 +130,23 @@ function App() {
   const overdue = pending
     .filter((i) => i.state === "open" && i.due_at && Date.parse(i.due_at) < now)
     .sort((a, b) => Date.parse(a.due_at!) - Date.parse(b.due_at!));
+  function closePanel() {
+    setPanel(undefined);
+    setSelected(undefined);
+  }
+  useEffect(() => {
+    function dismiss(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closePanel();
+        setToolsOpen(false);
+      }
+    }
+    window.addEventListener("keydown", dismiss);
+    return () => window.removeEventListener("keydown", dismiss);
+  }, []);
   const inspect = (id: string) => {
     setSelected(id);
-    if (matchMedia("(max-width:760px)").matches)
-      requestAnimationFrame(() =>
-        document
-          .querySelector(".ledger")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-      );
+    setPanel("building");
   };
   function dueLabel(date?: string) {
     if (!date) return "No due date";
@@ -162,166 +173,150 @@ function App() {
   return (
     <>
       <header>
-        <div className="brand">
+        <button
+          className="brand"
+          aria-label="Town tools"
+          aria-expanded={toolsOpen}
+          onClick={() => {
+            setToolsOpen(!toolsOpen);
+            closePanel();
+          }}
+        >
           <span className="brandstamp">
             <Icon name="home" size={26} />
           </span>
-          Bot Life
-        </div>
-        <div className="atlas-label">Personal town atlas</div>
-        <label className="source">
-          {mode === "live" ? "Source" : "Fixture"}{" "}
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as Mode)}
-          >
-            {modes.map((m) => (
-              <option key={m} value={m}>
-                {names[m]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </header>
-      <main>
-        <section className="intro">
-          <div>
-            <p className="eyebrow">
-              <span className="rule" />
-              Municipal survey
-            </p>
-            <h1>
-              Your town<span>.</span>
-            </h1>
-          </div>
-          <div className="date">
-            <span>Survey date</span>
-            {new Intl.DateTimeFormat("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              timeZone: "UTC",
-            }).format(now)}
-          </div>
-        </section>
-        <div className="workspace">
-          <section className="plate">
-            <nav aria-label="Town views">
-              {(["map", "directory"] as const).map((v) => (
+          Bot Life <span aria-hidden="true">{toolsOpen ? "−" : "+"}</span>
+        </button>
+        {toolsOpen && (
+          <>
+            <nav aria-label="Town tools">
+              {(["directory", "ledger"] as const).map((tool) => (
                 <button
-                  key={v}
-                  aria-pressed={view === v}
-                  onClick={() => setView(v)}
+                  key={tool}
+                  aria-expanded={panel === tool}
+                  onClick={() => {
+                    setSelected(undefined);
+                    setPanel(panel === tool ? undefined : tool);
+                  }}
                 >
-                  <Icon name={v === "map" ? "map" : "book"} size={16} />
-                  {v === "map" ? "Town map" : "Directory"}
+                  {tool === "ledger" ? "Ledger" : "Directory"}
                 </button>
               ))}
             </nav>
-            {status && (
-              <div role="status" className="status">
-                {status}{" "}
-                {status.includes("unavailable") && (
-                  <button onClick={() => setRetry((r) => r + 1)}>Retry</button>
-                )}
-              </div>
+            <label className="source">
+              <select
+                aria-label="Town source"
+                value={mode}
+                onChange={(e) => setMode(e.target.value as Mode)}
+              >
+                {modes.map((m) => (
+                  <option key={m} value={m}>
+                    {names[m]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
+      </header>
+      <main aria-label="Town atlas">
+        {status && (
+          <div role="status" className="status">
+            {status}{" "}
+            {status.includes("unavailable") && (
+              <button onClick={() => setRetry((r) => r + 1)}>Retry</button>
             )}
-            {town && view === "map" && (
-              <div className="mapfield">
-                <div className="compass" aria-hidden="true">
-                  N
-                  <svg viewBox="0 0 20 36" width="18" height="30">
-                    <path
-                      d="M10 1 16 27 10 22 4 27z"
-                      stroke="currentColor"
-                      fill="none"
-                    />
-                    <path d="M10 1v21l-6 5z" fill="currentColor" />
-                  </svg>
-                </div>
-                <div className="mapscroll">
-                  <TownMap
-                    {...{ town, now, selected, select: inspect, zoom }}
-                  />
-                </div>
-                <div className="zoom">
-                  <button
-                    aria-label="Zoom out"
-                    disabled={zoom <= 0.8}
-                    onClick={() => setZoom((z) => Math.max(0.8, z - 0.2))}
-                  >
-                    −
-                  </button>
-                  <button aria-label="Reset zoom" onClick={() => setZoom(1)}>
-                    <Icon name="target" size={14} />
-                  </button>
-                  <button
-                    aria-label="Zoom in"
-                    disabled={zoom >= 1.6}
-                    onClick={() => setZoom((z) => Math.min(1.6, z + 0.2))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
-            {town && view === "directory" && (
-              <div className="directory">
-                <label>
-                  District{" "}
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                  >
-                    <option value="all">All districts</option>
-                    {districtNames.map((d) => (
-                      <option key={d}>{d}</option>
-                    ))}
-                  </select>
-                </label>
-                {town.buildings
-                  .filter((b) => filter === "all" || b.district === filter)
-                  .map((b) =>
-                    row(
-                      b,
-                      b.district,
-                      b.boarded
-                        ? "Boarded"
-                        : buildingHealth(
-                            town.items.filter((i) => i.building_id === b.id),
-                            now,
-                          ),
-                    ),
-                  )}
-              </div>
-            )}
-            <footer className="platefoot">
-              <span>
-                <i className="keydot" />
-                Districts
-              </span>
-              {districtNames.map((d) => (
-                <span key={d}>
-                  <i style={{ background: colors[d] }} />
-                  {d}
-                </span>
-              ))}
-            </footer>
-          </section>
-          <aside className="ledger">
+          </div>
+        )}
+        {town && (
+          <div className="mapfield">
+            <div className="compass" aria-hidden="true">
+              N
+              <svg viewBox="0 0 20 36" width="18" height="30">
+                <path
+                  d="M10 1 16 27 10 22 4 27z"
+                  stroke="currentColor"
+                  fill="none"
+                />
+                <path d="M10 1v21l-6 5z" fill="currentColor" />
+              </svg>
+            </div>
+            <div className="mapscroll">
+              <TownMap {...{ town, now, selected, select: inspect, zoom }} />
+            </div>
+            <div className="zoom">
+              <button
+                aria-label="Zoom out"
+                disabled={zoom <= 0.8}
+                onClick={() => setZoom((z) => Math.max(0.8, z - 0.2))}
+              >
+                −
+              </button>
+              <button aria-label="Reset zoom" onClick={() => setZoom(1)}>
+                <Icon name="target" size={14} />
+              </button>
+              <button
+                aria-label="Zoom in"
+                disabled={zoom >= 1.6}
+                onClick={() => setZoom((z) => Math.min(1.6, z + 0.2))}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+        {panel === "directory" && town && (
+          <aside className="ledger directory" aria-label="Directory">
+            <div className="ledgerhead">
+              <h2>Directory</h2>
+              <button aria-label="Close directory" onClick={closePanel}>
+                <Icon name="close" />
+              </button>
+            </div>
+            <label>
+              District{" "}
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              >
+                <option value="all">All districts</option>
+                {districtNames.map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
+            </label>
+            {town.buildings
+              .filter((b) => filter === "all" || b.district === filter)
+              .map((b) =>
+                row(
+                  b,
+                  b.district,
+                  b.boarded
+                    ? "Boarded"
+                    : buildingHealth(
+                        town.items.filter((i) => i.building_id === b.id),
+                        now,
+                      ),
+                ),
+              )}
+          </aside>
+        )}
+        {(panel === "ledger" || (panel === "building" && building)) && (
+          <aside
+            className="ledger"
+            aria-label={building ? "Building record" : "Town ledger"}
+          >
             <div className="ledgerhead">
               <p className="eyebrow">
                 {building ? "Building record" : "Town records"}
               </p>
-              {building && (
-                <button
-                  className="plain"
-                  aria-label="Close building record"
-                  onClick={() => setSelected(undefined)}
-                >
-                  <Icon name="close" />
-                </button>
-              )}
+              <button
+                className="plain"
+                aria-label={building ? "Close building record" : "Close ledger"}
+                onClick={closePanel}
+              >
+                <Icon name="close" />
+              </button>
             </div>
             {building && town ? (
               <>
@@ -404,7 +399,7 @@ function App() {
               </>
             )}
           </aside>
-        </div>
+        )}
       </main>
     </>
   );

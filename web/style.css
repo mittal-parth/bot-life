@@ -39,160 +39,112 @@ h3,
 .stats b {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
 }
+#root {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
 header {
-  height: 68px;
-  border-bottom: 1px solid var(--line);
+  position: fixed;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
   display: flex;
   align-items: center;
-  gap: 22px;
-  padding: 0 clamp(18px, 5vw, 84px);
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 8px;
+  background: #faf8ef;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 2px 5px #373c3212;
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 25px;
-  letter-spacing: -1px;
+  gap: 8px;
+  font:
+    600 20px Georgia,
+    serif;
+  white-space: nowrap;
 }
 .brandstamp {
-  background: #435b47;
-  color: #faf5e6;
-  border-radius: 5px;
   display: grid;
   place-items: center;
-  width: 35px;
-  height: 35px;
+  color: #536752;
 }
-.atlas-label {
-  border-left: 1px solid var(--line);
-  padding-left: 20px;
-  color: var(--muted);
-}
-.source {
-  margin-left: auto;
+nav {
   display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-  color: var(--muted);
+  gap: 4px;
+  margin-left: auto;
 }
+nav button,
 select {
-  padding: 6px 9px;
-  border: 1px solid #c4c3b2;
-  border-radius: 4px;
-  background: #faf8ef;
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+nav button[aria-expanded="true"],
+nav button:hover {
+  background: #e6e2d6;
+}
+.source select {
+  border: 1px solid var(--line);
+  background: transparent;
   color: var(--ink);
-  font-weight: 600;
 }
 main {
-  max-width: 1660px;
-  margin: auto;
-  padding: 30px clamp(16px, 5vw, 84px) 34px;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #f3efe3;
 }
-.intro {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 22px;
-}
-.eyebrow,
-.date span,
-.stats small,
-.platefoot span:first-child {
-  font:
-    600 10px/1.5 ui-monospace,
-    "Courier New",
-    monospace;
-  text-transform: uppercase;
-  letter-spacing: 1.45px;
-}
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: #64745e;
-}
-.rule {
-  width: 23px;
-  height: 2px;
-  background: #779275;
-}
-h1 {
-  font-size: clamp(42px, 4.2vw, 72px);
-  font-weight: 500;
-  line-height: 1.03;
-  letter-spacing: -0.055em;
-  margin: 6px 0 0;
-}
-h1 span {
-  color: var(--accent);
-}
-.date {
-  font-family: Georgia, serif;
-  font-size: 17px;
-  text-align: right;
-  color: #505747;
-}
-.date span {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--muted);
-}
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(265px, 23vw, 350px);
-  align-items: start;
-  gap: 20px;
-}
-.plate,
-.ledger {
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: #f9f7ef;
-  overflow: hidden;
-}
-.plate nav {
-  display: flex;
-  align-items: stretch;
-  gap: 22px;
-  padding: 0 18px;
-  height: 46px;
-  border-bottom: 1px solid var(--line);
-}
-nav button {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 12px;
-  color: var(--muted);
-  padding: 0 2px;
-}
-nav button[aria-pressed="true"] {
-  color: #334936;
-  box-shadow: inset 0 -2px #526c50;
-  font-weight: 700;
+.mapfield,
+.mapscroll,
+.town-map {
+  width: 100%;
+  height: 100%;
 }
 .mapfield {
   position: relative;
-  background-color: #f3efe3;
-  background-image: radial-gradient(#aea48a40 0.65px, transparent 0.8px);
-  background-size: 9px 9px;
-}
-.mapscroll {
-  overflow: auto;
 }
 .town-map {
   display: block;
-  width: 100%;
-  min-height: 335px;
+}
+.status {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  background: #faf8ef;
+}
+.ledger {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: min(315px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  background: #faf8ef;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px #373c3218;
+  border-radius: 4px;
+}
+.eyebrow,
+.stats small {
+  font:
+    600 10px ui-monospace,
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .compass {
   position: absolute;
   pointer-events: none;
   left: 18px;
-  top: 16px;
+  bottom: 14px;
   display: grid;
   justify-items: center;
   color: #777d66;
@@ -240,31 +192,12 @@ nav button[aria-pressed="true"] {
     opacity: 0.56;
   }
 }
-.platefoot {
-  padding: 13px 15px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 17px;
-  border-top: 1px solid var(--line);
-  font-size: 11px;
-}
-.platefoot span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  text-transform: capitalize;
-}
-.platefoot i,
 .spot {
   width: 8px;
   height: 8px;
   border: 1px solid #686f5a70;
   border-radius: 50%;
   flex: none;
-}
-.platefoot .keydot {
-  display: none;
 }
 .ledger {
   padding: 19px 19px 8px;
@@ -428,53 +361,77 @@ hr {
 .entry small {
   margin-top: 5px;
 }
-@media (max-width: 760px) {
+@media (max-width: 600px) {
   header {
-    height: 57px;
+    gap: 4px;
+    padding-inline: 6px;
+    font-size: 12px;
   }
-  .atlas-label {
-    display: none;
-  }
-  main {
-    padding-top: 20px;
-  }
-  .intro {
-    margin-bottom: 15px;
-  }
-  .workspace {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .town-map {
-    min-height: 0;
-    min-width: 460px;
-  }
-  .platefoot {
-    gap: 8px;
+  .brand {
+    font-size: 16px;
+    gap: 4px;
   }
   .ledger {
-    scroll-margin: 12px;
-  }
-  .date {
-    font-size: 13px;
-  }
-  .source {
-    gap: 5px;
-  }
-  .zoom {
-    right: 7px;
-    bottom: 6px;
-  }
-  .plate nav {
-    height: 41px;
-  }
-  .compass {
-    left: 10px;
-    top: 8px;
+    top: auto;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: 52%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .smoke {
     animation: none;
+  }
+}
+
+/* Routes are animated inside their fixed isometric anchor. */
+.tram-run {
+  animation: tram-trip 24s ease-in-out -7s infinite;
+}
+@keyframes tram-trip {
+  0%,
+  8%,
+  100% {
+    transform: translate(0, 0);
+  }
+  48%,
+  57% {
+    transform: translate(298px, 152px);
+  }
+}
+.promenade {
+  animation: promenade 6s ease-in-out infinite alternate;
+}
+@keyframes promenade {
+  to {
+    transform: translate(var(--walk-x), var(--walk-y));
+  }
+}
+.stride {
+  animation: footfall 0.55s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+@keyframes footfall {
+  to {
+    transform: scaleX(0.62);
+  }
+}
+.airship {
+  animation: airship 28s ease-in-out infinite alternate;
+}
+@keyframes airship {
+  from {
+    transform: translate(-23px, 6px) rotate(-2deg);
+  }
+  to {
+    transform: translate(43px, -5px) rotate(2deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .town-map * {
+    animation-play-state: paused !important;
   }
 }

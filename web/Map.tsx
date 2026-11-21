@@ -3,6 +3,18 @@ import { BuildingArt, Tree } from "./Illustrations.tsx";
 import type { Building, District, TownSnapshot } from "../shared/town.ts";
 import { buildingHealth, type Health } from "./health.ts";
 
+import {
+  Airship,
+  Boulevards,
+  Streetcar,
+  Bunting,
+  Parade,
+  Resident,
+} from "./StreetLife.tsx";
+import { FerrisWheel, MarketStall, FairStyles } from "./Fairground.tsx";
+import { Windmill, FlowerBed, Bandstand, Bench } from "./GardenArt.tsx";
+import { Harbor } from "./Harbor.tsx";
+
 export const districts: District[] = ["work", "money", "people", "paperwork"];
 export const colors = {
   work: "#d9b34d",
@@ -144,8 +156,66 @@ function Slab({
     buildings.every(
       (b) => Math.hypot(u - b.plot.x - 0.65, v - b.plot.y - 0.65) > 1.12,
     );
-  positions.forEach(([u, v], i) => {
+  const decor: [number, number, ReactNode][] = [];
+  if (district === "people")
+    decor.push(
+      [6.8, 2.7, <FerrisWheel />],
+      [1.6, 6.8, <MarketStall color="#cf6646" />],
+      [3.1, 7.1, <MarketStall color="#e3b449" />],
+      [2.4, 7.7, <Bunting />],
+    );
+  if (district === "work")
+    decor.push(
+      [1.5, 6.5, <Bandstand />],
+      [6.6, 6.5, <FlowerBed />],
+      [6.8, 7.8, <Bench />],
+    );
+  if (district === "money")
+    decor.push(
+      [1.4, 6.4, <MarketStall color="#508e85" />],
+      [3.2, 6.5, <MarketStall color="#ce6246" />],
+      [6.7, 2.3, <MarketStall color="#e0b049" />],
+      [2, 7.7, <Bunting />],
+    );
+  if (district === "paperwork")
+    decor.push(
+      [1.8, 6.9, <Windmill />],
+      [3.5, 7.6, <FlowerBed />],
+      [6.8, 2.6, <Bandstand />],
+      [7.5, 6.4, <FlowerBed />],
+    );
+  const placed = decor.filter(([u, v]) => free(u, v));
+  placed.forEach(([u, v, node], i) =>
+    add(
+      u,
+      v,
+      "scene" + i,
+      <g aria-hidden="true" pointerEvents="none">
+        {node}
+      </g>,
+    ),
+  );
+  [
+    [0.9, 3.7],
+    [5.3, 1.3],
+    [6.9, 7.4],
+    [3, 5.2],
+  ].forEach(([u, v], i) => {
     if (free(u, v))
+      add(
+        u,
+        v,
+        "neighbors" + i,
+        <g aria-hidden="true" pointerEvents="none">
+          <Resident variant={i} />
+          <g transform="translate(5 2)">
+            <Resident variant={i + 2} />
+          </g>
+        </g>,
+      );
+  });
+  positions.forEach(([u, v], i) => {
+    if (free(u, v) && placed.every(([a, b]) => Math.hypot(a - u, b - v) > 1.3))
       add(
         u,
         v,
@@ -155,7 +225,8 @@ function Slab({
   });
   for (const [i, v] of [1.1, 3.1, 6.5, 8].entries())
     if (free(4.9, v)) add(4.9, v, "lamp" + i, <Lamp />);
-  if (free(6.5, 5.8)) add(6.5, 5.8, "fountain", <Fountain />);
+  if (district === "work" && free(6.5, 5.8))
+    add(6.5, 5.8, "fountain", <Fountain />);
   for (const b of buildings) {
     const items = town.items.filter((i) => i.building_id === b.id);
     const state = buildingHealth(items, now);
@@ -256,13 +327,48 @@ function Slab({
           strokeWidth=".8"
         />
       ))}
-      {district === "money" && (
-        <polygon
-          points={quad(0.4, 5.1, 1.2, 3.1)}
-          fill="#9ac7d6"
-          stroke="#819fa1"
-        />
-      )}
+      <g
+        transform="matrix(18 9 -18 9 0 0)"
+        pointerEvents="none"
+        aria-hidden="true"
+      >
+        {district === "people" && (
+          <g transform="translate(4.6 0)" stroke="#f6f1cf" strokeWidth=".055">
+            <rect x=".65" y="5.15" width="2.55" height="3" fill="#8fb5bc" />
+            <path
+              d="M.85 5.4h2.15v2.52H.85z M1.12 5.4v2.52m1.62-2.52v2.52M.85 6.66H3m-1.88-.77h1.62v1.55H1.12z"
+              fill="none"
+            />
+          </g>
+        )}
+        {district === "paperwork" && (
+          <g stroke="#a68e67" strokeWidth=".045">
+            {Array.from({ length: 8 }, (_, i) => (
+              <path key={i} d={`M.7 ${5.3 + i * 0.38}h3`} />
+            ))}
+          </g>
+        )}
+        {district === "money" && (
+          <g stroke="#b09c7d" strokeWidth=".045">
+            {Array.from({ length: 13 }, (_, i) => (
+              <path key={i} d={`M${0.55 + i * 0.28} 5v3.45`} />
+            ))}
+          </g>
+        )}
+        {[1.3, 7.5].map((u) => (
+          <g key={u} fill="#fff7e1">
+            {Array.from({ length: 5 }, (_, i) => (
+              <rect
+                key={i}
+                x={u + i * 0.1}
+                y="4.16"
+                width=".055"
+                height=".65"
+              />
+            ))}
+          </g>
+        ))}
+      </g>
       {Array.from({ length: 45 }, (_, i) => {
         const u = 0.32 + ((i * 37) % 81) / 10,
           v = 0.35 + ((i * 53) % 81) / 10;
@@ -281,6 +387,8 @@ function Slab({
         .map((s) => (
           <g key={s.key}>{s.node}</g>
         ))}
+      {district === "money" && <Harbor />}
+      <Parade districtIndex={districts.indexOf(district)} />
     </g>
   );
 }
@@ -304,9 +412,13 @@ export function TownMap({
       aria-label="Isometric town map"
     >
       <g transform={`translate(380 236) scale(${zoom}) translate(-380 -236)`}>
+        <FairStyles />
+        <Airship />
+        <Boulevards />
         {districts.map((d) => (
           <Slab key={d} district={d} {...{ town, now, selected, select }} />
         ))}
+        <Streetcar />
         {(
           [
             ["Work", 425, 48],
