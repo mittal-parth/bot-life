@@ -25,4 +25,11 @@ Use the [OpenMausBot harness contract](docs/city/harness-contract.md) to connect
 
 With Node 24 and the dependencies installed, run `pnpm start` for the local town server, then `pnpm dev:web` in a second terminal. Open [the atlas](http://127.0.0.1:5173). Select a building or ledger entry to inspect its items. The directory lists every building, including close neighbors on the map.
 
-The source selector loads the busy, fresh or inferno fixture from the server, or subscribes to the live town. Fixture views use the fixture's survey time. Live views advance with the clock. Set an ISO timestamp in `?now=` to inspect decay at a particular time, and use `?fixture=fresh`, `busy`, `inferno` or `live` to link a view. `pnpm build:web` creates the browser bundle in `web/dist`. The atlas reads town state; thread actions are planned for M4.
+The source selector loads the busy, fresh or inferno fixture from the server, or subscribes to the live town. Fixture views use the fixture's survey time. Live views advance with the clock. Set an ISO timestamp in `?now=` to inspect decay at a particular time, and use `?fixture=fresh`, `busy`, `inferno` or `live` to link a view. `pnpm build:web` creates the browser bundle in `web/dist`. The default view is the live town. Fixture selection changes the town snapshot. Worker conversations, the photo gallery and connected-app panels use the local installation in every view.
+
+## Using the island
+
+- Open the Photo bazaar to import photos and add notes. The gallery suggests albums using filenames, notes and dates added. Open a photo and choose a character to ask about its contents. Only sending the question attaches that photo to the character’s OpenMausBot thread.
+- Open the Post Office for Gmail or GitHub HQ for repository events. Connect an account through OpenMausBot’s Composio link. With managed app events available, select **Set up deliveries**, choose a worker and enable an event. The worker needs access to the connected app in OpenMausBot. Manage or pause the event there.
+- New Gmail deliveries fly from the cloud to the Post Office. Unread counts belong to the island. Mark a delivery read at the building or in its worker’s conversation to clear it in both places.
+- The temple keeps reflections in this browser. The cricket ground displays ESPNcricinfo scores, refreshed every two minutes. Click it for the full match list.

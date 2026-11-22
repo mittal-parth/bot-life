@@ -1,3 +1,4 @@
+import { PanelPaper } from "./PanelPaper.tsx";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -9,7 +10,23 @@ import {
 import { BuildingArt } from "./Illustrations.tsx";
 import { TownMap, colors } from "./Map.tsx";
 import { buildingHealth, day, decay, overdueDays } from "./health.ts";
+import { BotDesk, useBotDesk } from "./BotDesk.tsx";
+import { PhotoGallery } from "./PhotoGallery.tsx";
+import { IslandLandmarks, TempleReflection } from "./IslandLandmarks.tsx";
+import { SurfacePanel, useSurfaces } from "./SurfacePanel.tsx";
+import { CricketScores, useCricketScores } from "./CricketScores.tsx";
+import { DrawablyButton, DrawablySelect } from "drawably/react";
+import "drawably/style.css";
 import "./style.css";
+
+const places = {
+  cricket: "Cricket scores",
+  gallery: "Photo gallery",
+  gmail: "Post Office",
+  github: "GitHub HQ",
+  temple: "Temple",
+} as const;
+type Place = keyof typeof places;
 
 const modes = ["busy", "fresh", "inferno", "live"] as const;
 type Mode = (typeof modes)[number];
@@ -48,15 +65,21 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
   );
 }
 function App() {
+  const desk = useBotDesk();
+  const cricket = useCricketScores();
+  const surfaces = useSurfaces();
   const [mode, setMode] = useState<Mode>(
-    modes.find((m) => m === params.get("fixture")) ?? "busy",
+    modes.find((m) => m === params.get("fixture")) ?? "live",
   );
   const [town, setTown] = useState<TownSnapshot | null>(null);
   const [clock, setClock] = useState(Date.now());
   const [reference, setReference] = useState<number>();
   const [status, setStatus] = useState("");
   const [selected, setSelected] = useState<string>();
-  const [panel, setPanel] = useState<"ledger" | "directory" | "building">();
+  const [panel, setPanel] = useState<
+    "ledger" | "directory" | "building" | Place
+  >();
+  const [previewMailFlight, setPreviewMailFlight] = useState(0);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [filter, setFilter] = useState("all");
@@ -124,6 +147,13 @@ function App() {
     const timer = setInterval(() => setClock(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
+  useEffect(() => {
+    if (desk.open) {
+      setPanel(undefined);
+      setSelected(undefined);
+      setToolsOpen(false);
+    }
+  }, [desk.open, desk.visit]);
   const now = Number.isFinite(fixedTime) ? fixedTime : (reference ?? clock);
   const building = town?.buildings.find((b) => b.id === selected);
   const pending = town?.items.filter((i) => i.state !== "fixed") ?? [];
@@ -138,13 +168,28 @@ function App() {
     function dismiss(event: KeyboardEvent) {
       if (event.key === "Escape") {
         closePanel();
+        desk.setOpen(false);
         setToolsOpen(false);
       }
     }
     window.addEventListener("keydown", dismiss);
     return () => window.removeEventListener("keydown", dismiss);
   }, []);
+  function openPlace(place: Place) {
+    desk.setOpen(false);
+    setSelected(undefined);
+    setToolsOpen(false);
+    setPanel(place);
+  }
+  const workerUnread: Record<string, number> = {};
+  for (const surface of Object.values(surfaces.byService)) {
+    for (const delivery of surface.deliveries) {
+      if (delivery.unread)
+        workerUnread[delivery.botId] = (workerUnread[delivery.botId] ?? 0) + 1;
+    }
+  }
   const inspect = (id: string) => {
+    desk.setOpen(false);
     setSelected(id);
     setPanel("building");
   };
@@ -173,11 +218,14 @@ function App() {
   return (
     <>
       <header>
-        <button
+        <DrawablyButton
           className="brand"
+          variant="solid"
+          boil={0}
           aria-label="Town tools"
           aria-expanded={toolsOpen}
           onClick={() => {
+            desk.setOpen(false);
             setToolsOpen(!toolsOpen);
             closePanel();
           }}
@@ -186,13 +234,15 @@ function App() {
             <Icon name="home" size={26} />
           </span>
           Bot Life <span aria-hidden="true">{toolsOpen ? "−" : "+"}</span>
-        </button>
+        </DrawablyButton>
         {toolsOpen && (
           <>
             <nav aria-label="Town tools">
               {(["directory", "ledger"] as const).map((tool) => (
-                <button
+                <DrawablyButton
                   key={tool}
+                  variant={panel === tool ? "solid" : "outline"}
+                  boil={0}
                   aria-expanded={panel === tool}
                   onClick={() => {
                     setSelected(undefined);
@@ -200,11 +250,11 @@ function App() {
                   }}
                 >
                   {tool === "ledger" ? "Ledger" : "Directory"}
-                </button>
+                </DrawablyButton>
               ))}
             </nav>
             <label className="source">
-              <select
+              <DrawablySelect
                 aria-label="Town source"
                 value={mode}
                 onChange={(e) => setMode(e.target.value as Mode)}
@@ -214,7 +264,7 @@ function App() {
                     {names[m]}
                   </option>
                 ))}
-              </select>
+              </DrawablySelect>
             </label>
           </>
         )}
@@ -242,7 +292,29 @@ function App() {
               </svg>
             </div>
             <div className="mapscroll">
-              <TownMap {...{ town, now, selected, select: inspect, zoom }} />
+              <TownMap
+                {...{ town, now, selected, zoom, desk, workerUnread }}
+                postOfficeConnected={surfaces.byService.gmail.connected}
+                select={(id) =>
+                  town.buildings.find((b) => b.id === id)?.kind ===
+                  "post-office"
+                    ? openPlace("gmail")
+                    : inspect(id)
+                }
+                landmarks={
+                  <IslandLandmarks
+                    cricketBoard={cricket.board}
+                    town={town}
+                    onOpen={openPlace}
+                    previewMailFlight={previewMailFlight}
+                    mailUnread={surfaces.byService.gmail.unread}
+                    githubUnread={surfaces.byService.github.unread}
+                    mailConnected={surfaces.byService.gmail.connected}
+                    githubConnected={surfaces.byService.github.connected}
+                    mailEventKey={surfaces.byService.gmail.deliveries[0]?.id}
+                  />
+                }
+              />
             </div>
             <div className="zoom">
               <button
@@ -265,40 +337,78 @@ function App() {
             </div>
           </div>
         )}
+        <BotDesk
+          desk={desk}
+          inbox={Object.values(surfaces.byService)
+            .flatMap((service) => service.deliveries)
+            .filter(
+              (delivery) => delivery.botId === desk.bot?.id && delivery.unread,
+            )}
+          markRead={surfaces.markRead}
+        />
+        {panel === "gallery" && (
+          <PhotoGallery desk={desk} onClose={closePanel} />
+        )}
+        {panel === "cricket" && (
+          <CricketScores feed={cricket} onClose={closePanel} />
+        )}
+        {panel === "temple" && <TempleReflection onClose={closePanel} />}
+        {(panel === "gmail" || panel === "github") && (
+          <SurfacePanel
+            key={panel}
+            service={panel}
+            surfaces={surfaces}
+            bots={desk.bots}
+            onClose={closePanel}
+            onPreviewDelivery={() => {
+              closePanel();
+              setPreviewMailFlight((n) => n + 1);
+            }}
+          />
+        )}
         {panel === "directory" && town && (
           <aside className="ledger directory" aria-label="Directory">
-            <div className="ledgerhead">
-              <h2>Directory</h2>
-              <button aria-label="Close directory" onClick={closePanel}>
-                <Icon name="close" />
-              </button>
-            </div>
-            <label>
-              District{" "}
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                <option value="all">All districts</option>
-                {districtNames.map((d) => (
-                  <option key={d}>{d}</option>
+            <PanelPaper>
+              <div className="ledgerhead">
+                <h2>Directory</h2>
+                <button aria-label="Close directory" onClick={closePanel}>
+                  <Icon name="close" />
+                </button>
+              </div>
+              <label>
+                District{" "}
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                >
+                  <option value="all">All districts</option>
+                  {districtNames.map((d) => (
+                    <option key={d}>{d}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="directory-places">
+                {(Object.keys(places) as Place[]).map((place) => (
+                  <DrawablyButton key={place} onClick={() => openPlace(place)}>
+                    {places[place]}
+                  </DrawablyButton>
                 ))}
-              </select>
-            </label>
-            {town.buildings
-              .filter((b) => filter === "all" || b.district === filter)
-              .map((b) =>
-                row(
-                  b,
-                  b.district,
-                  b.boarded
-                    ? "Boarded"
-                    : buildingHealth(
-                        town.items.filter((i) => i.building_id === b.id),
-                        now,
-                      ),
-                ),
-              )}
+              </div>
+              {town.buildings
+                .filter((b) => filter === "all" || b.district === filter)
+                .map((b) =>
+                  row(
+                    b,
+                    b.district,
+                    b.boarded
+                      ? "Boarded"
+                      : buildingHealth(
+                          town.items.filter((i) => i.building_id === b.id),
+                          now,
+                        ),
+                  ),
+                )}
+            </PanelPaper>
           </aside>
         )}
         {(panel === "ledger" || (panel === "building" && building)) && (
@@ -306,128 +416,134 @@ function App() {
             className="ledger"
             aria-label={building ? "Building record" : "Town ledger"}
           >
-            <div className="ledgerhead">
-              <p className="eyebrow">
-                {building ? "Building record" : "Town records"}
-              </p>
-              <button
-                className="plain"
-                aria-label={building ? "Close building record" : "Close ledger"}
-                onClick={closePanel}
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-            {building && town ? (
-              <>
-                <div className="portrait">
-                  <svg viewBox="-55 -80 110 100">
-                    <BuildingArt
-                      kind={building.kind}
-                      boarded={building.boarded}
-                    />
-                  </svg>
-                </div>
-                <h2>{building.entity}</h2>
-                <p className="byline">
-                  {building.district} district ·{" "}
-                  {keeperByDistrict[building.district]}
+            <PanelPaper>
+              <div className="ledgerhead">
+                <p className="eyebrow">
+                  {building ? "Building record" : "Town records"}
                 </p>
-                <hr />
-                <h3>Open items</h3>
-                {pending
-                  .filter((i) => i.building_id === building.id)
-                  .map((i) => (
-                    <div className="entry" key={i.id}>
-                      <strong>{i.title}</strong>
-                      <small>
-                        {dueLabel(i.due_at)} · {decay(i, now)}
-                      </small>
-                      {mode !== "live" && building.district === "money" && (
-                        <button
-                          className="demo-pay"
-                          onClick={() => {
-                            setTown(
-                              (t) =>
-                                t && {
-                                  ...t,
-                                  items: t.items.map((item) =>
-                                    item.id === i.id &&
-                                    item.building_id === building.id
-                                      ? {
-                                          ...item,
-                                          state: "fixed",
-                                          evidence: "Sample payment receipt",
-                                          updated_at: new Date(
-                                            now,
-                                          ).toISOString(),
-                                        }
-                                      : item,
-                                  ),
-                                },
-                            );
-                            closePanel();
-                            setToolsOpen(false);
-                          }}
-                        >
-                          Simulate payment
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                {!pending.some((i) => i.building_id === building.id) && (
-                  <p className="empty">
-                    {building.boarded
-                      ? "Boarded up until its app is connected."
-                      : "No open items at this building."}
+                <button
+                  className="plain"
+                  aria-label={
+                    building ? "Close building record" : "Close ledger"
+                  }
+                  onClick={closePanel}
+                >
+                  <Icon name="close" />
+                </button>
+              </div>
+              {building && town ? (
+                <>
+                  <div className="portrait">
+                    <svg viewBox="-55 -80 110 100">
+                      <BuildingArt
+                        kind={building.kind}
+                        boarded={building.boarded}
+                      />
+                    </svg>
+                  </div>
+                  <h2>{building.entity}</h2>
+                  <p className="byline">
+                    {building.district} district ·{" "}
+                    {keeperByDistrict[building.district]}
                   </p>
-                )}
-              </>
-            ) : (
-              <>
-                <h2>Town ledger</h2>
-                <div className="stats">
-                  <div>
-                    <b>{town?.buildings.length ?? "—"}</b>
-                    <small>Buildings</small>
+                  <hr />
+                  <h3>Open items</h3>
+                  {pending
+                    .filter((i) => i.building_id === building.id)
+                    .map((i) => (
+                      <div className="entry" key={i.id}>
+                        <strong>{i.title}</strong>
+                        <small>
+                          {dueLabel(i.due_at)} · {decay(i, now)}
+                        </small>
+                        {mode !== "live" && building.district === "money" && (
+                          <button
+                            className="demo-pay"
+                            onClick={() => {
+                              setTown(
+                                (t) =>
+                                  t && {
+                                    ...t,
+                                    items: t.items.map((item) =>
+                                      item.id === i.id &&
+                                      item.building_id === building.id
+                                        ? {
+                                            ...item,
+                                            state: "fixed",
+                                            evidence: "Sample payment receipt",
+                                            updated_at: new Date(
+                                              now,
+                                            ).toISOString(),
+                                          }
+                                        : item,
+                                    ),
+                                  },
+                              );
+                              closePanel();
+                              setToolsOpen(false);
+                            }}
+                          >
+                            Simulate payment
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  {!pending.some((i) => i.building_id === building.id) && (
+                    <p className="empty">
+                      {building.boarded
+                        ? "Boarded up until its app is connected."
+                        : "No open items at this building."}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2>Town ledger</h2>
+                  <div className="stats">
+                    <div>
+                      <b>{town?.buildings.length ?? "—"}</b>
+                      <small>Buildings</small>
+                    </div>
+                    <div>
+                      <b>{town ? pending.length : "—"}</b>
+                      <small>Open items</small>
+                    </div>
                   </div>
-                  <div>
-                    <b>{town ? pending.length : "—"}</b>
-                    <small>Open items</small>
+                  <div className="sectiontitle">
+                    <h3>Needs attention</h3>
+                    <span>{overdue.length}</span>
                   </div>
-                </div>
-                <div className="sectiontitle">
-                  <h3>Needs attention</h3>
-                  <span>{overdue.length}</span>
-                </div>
-                {overdue.map((i) => {
-                  const b = town!.buildings.find((b) => b.id === i.building_id);
-                  return (
-                    b && (
-                      <button
-                        className="issue"
-                        key={i.id}
-                        onClick={() => inspect(b.id)}
-                      >
-                        <span
-                          className="spot"
-                          style={{ background: colors[b.district] }}
-                        />
-                        <span>
-                          <strong>{b.entity}</strong>
-                          <small>{i.title}</small>
-                          <em>{overdueDays(i, now)}d overdue</em>
-                        </span>
-                        <Icon name="arrow" size={14} />
-                      </button>
-                    )
-                  );
-                })}
-                {town && !overdue.length && (
-                  <p className="empty">No overdue items in this town.</p>
-                )}
-              </>
-            )}
+                  {overdue.map((i) => {
+                    const b = town!.buildings.find(
+                      (b) => b.id === i.building_id,
+                    );
+                    return (
+                      b && (
+                        <button
+                          className="issue"
+                          key={i.id}
+                          onClick={() => inspect(b.id)}
+                        >
+                          <span
+                            className="spot"
+                            style={{ background: colors[b.district] }}
+                          />
+                          <span>
+                            <strong>{b.entity}</strong>
+                            <small>{i.title}</small>
+                            <em>{overdueDays(i, now)}d overdue</em>
+                          </span>
+                          <Icon name="arrow" size={14} />
+                        </button>
+                      )
+                    );
+                  })}
+                  {town && !overdue.length && (
+                    <p className="empty">No overdue items in this town.</p>
+                  )}
+                </>
+              )}
+            </PanelPaper>
           </aside>
         )}
       </main>

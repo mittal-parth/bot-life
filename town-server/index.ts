@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { FixtureName, seedTown } from '../fixtures/towns.ts';
 import { createApp } from './app.ts';
@@ -13,7 +13,7 @@ if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
 
 const store = new TownStore(path);
 seedTown(store, fixture);
-const app = createApp(store);
+const app = createApp(store, path === ":memory:" ? undefined : join(dirname(path), "private-chat"));
 const server = serve({ fetch: app.fetch, hostname: '127.0.0.1', port }, (info) => {
   console.log(`Town server listening at http://127.0.0.1:${info.port}`);
 });

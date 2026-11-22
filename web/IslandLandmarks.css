@@ -1,0 +1,141 @@
+.island-place {
+  cursor: pointer;
+}
+.island-place:focus-visible {
+  outline: 1px dashed #80643b;
+  outline-offset: 3px;
+}
+.island-place:hover {
+  filter: brightness(1.035);
+}
+.island-cloud {
+  animation: island-cloud-drift 13s ease-in-out infinite alternate;
+}
+.temple-pennant {
+  transform-origin: 0 -35px;
+  animation: temple-fabric 2.6s ease-in-out infinite alternate;
+}
+.meadow-nod {
+  transform-origin: 3px -7px;
+  animation: cow-graze 6.5s ease-in-out infinite alternate;
+}
+.meadow-tail {
+  transform-origin: -6px -6px;
+  animation: cow-swish 3.7s ease-in-out infinite;
+}
+.post-flight {
+  offset-rotate: 0deg;
+  animation: mail-landing 3.4s ease-in-out both;
+}
+.cricket-ball {
+  animation: cricket-delivery 1.45s ease-out both;
+}
+.cricket-outcome {
+  animation: cricket-result 3.4s ease-in-out both;
+}
+@keyframes cricket-result {
+  0%,
+  25% {
+    opacity: 0;
+  }
+  40%,
+  85% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes island-cloud-drift {
+  from {
+    transform: translate(-5px, 1px);
+  }
+  to {
+    transform: translate(7px, -2px);
+  }
+}
+@keyframes temple-fabric {
+  to {
+    transform: skewY(10deg) scaleX(0.85);
+  }
+}
+@keyframes cow-graze {
+  60%,
+  100% {
+    transform: rotate(21deg);
+  }
+}
+@keyframes cow-swish {
+  70%,
+  93% {
+    transform: rotate(-15deg);
+  }
+  82% {
+    transform: rotate(12deg);
+  }
+}
+@keyframes mail-landing {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  6%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+@keyframes cricket-delivery {
+  from {
+    offset-distance: 0%;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-flight,
+  .cricket-ball {
+    display: none;
+  }
+  .island-cloud,
+  .temple-pennant,
+  .meadow-tail,
+  .meadow-nod {
+    animation: none;
+  }
+}
+.temple-reflection form {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+}
+.temple-reflection form > button {
+  justify-self: start;
+}
+.temple-reflection textarea {
+  min-height: 5rem;
+  width: 100%;
+}
+.temple-reflection article {
+  margin: 0 0.9rem 0.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #cabc9f;
+}
+.temple-reflection article time,
+.temple-reflection small {
+  font-size: 0.78rem;
+  color: #625b4e;
+}
+.temple-reflection article p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0.3rem 0 0;
+}

@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      "^/api/(fixtures/(fresh|busy|inferno)|events)(\\?|$)": {
+      "^/api/(fixtures/(fresh|busy|inferno)|cricket|photos(/[\\w-]+(/image)?)?|events|chat/surfaces(/(gmail|github)/(connect|watch|events))?|chat/login(/status)?|chat/photo-turns|chat/pair|chat/bots(/[\\w-]+/messages)?)(\\?|$)": {
         target: "http://127.0.0.1:" + port,
         changeOrigin: true,
         configure(proxy) {

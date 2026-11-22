@@ -1,0 +1,44 @@
+.surface-panel {
+  z-index: 14;
+  max-height: min(75dvh, 620px);
+}
+.surface-panel .desk-head {
+  justify-content: space-between;
+}
+.surface-panel .surface-connected {
+  color: #32664e;
+}
+.surface-panel h3 {
+  font:
+    600 1rem Georgia,
+    serif;
+  margin: 1rem 0 0.4rem;
+}
+.surface-panel .desk-send {
+  display: inline-block;
+  text-align: center;
+}
+.surface-panel ul {
+  padding-left: 1.2rem;
+}
+.surface-panel .surface-deliveries {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.surface-deliveries li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  border-top: 1px solid #b5ac94;
+  padding: 0.5rem 0;
+}
+.surface-deliveries small {
+  display: block;
+  opacity: 0.78;
+  margin-top: 0.2rem;
+}
+.surface-refresh {
+  margin-top: 0.7rem;
+}

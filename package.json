@@ -17,9 +17,12 @@
   "dependencies": {
     "@hono/node-server": "^2.1.11",
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "drawably": "^0.4.2",
     "hono": "^4.13.19",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

@@ -1,3 +1,7 @@
+import { join } from 'node:path';
+import { cricketFeed } from './cricket.ts';
+import { photoApi } from './photos.ts';
+import { chatApi } from './omb/chat.ts';
 import { EventEmitter } from 'node:events';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
@@ -61,7 +65,7 @@ function createMcp(store: TownStore, publish: (event: TownEvent) => void) {
   return server;
 }
 
-export function createApp(store: TownStore) {
+export function createApp(store: TownStore, sessionDir?: string) {
   const events = new EventEmitter();
   events.setMaxListeners(0);
   const app = new Hono();
@@ -73,6 +77,11 @@ export function createApp(store: TownStore) {
     }
     await next();
   });
+
+  const photos = photoApi(sessionDir && join(sessionDir, 'photos'));
+  app.get('/api/cricket', cricketFeed());
+  app.route('/api/photos', photos);
+  app.route('/api/chat', chatApi(fetch, sessionDir, id => photos.request('/' + id + '/image')));
 
   app.get('/api/town', (context) => {
     const query = GetTown.safeParse({ district: context.req.query('district') });

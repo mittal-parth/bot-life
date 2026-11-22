@@ -1,3 +1,5 @@
+import type { Desk } from "./BotDesk.tsx";
+import { IslandReceiver, TownCouriers } from "./WorkerScene.tsx";
 import type { ReactNode } from "react";
 import { BuildingArt, Tree } from "./Illustrations.tsx";
 import type { Building, District, TownSnapshot } from "../shared/town.ts";
@@ -112,6 +114,7 @@ const positions = [
   [2.7, 6.8],
 ];
 function Slab({
+  postOfficeConnected,
   dispatch,
   district,
   town,
@@ -119,6 +122,7 @@ function Slab({
   selected,
   select,
 }: {
+  postOfficeConnected: boolean;
   dispatch: ReturnType<typeof useDispatch>;
   district: District;
   town: TownSnapshot;
@@ -214,7 +218,9 @@ function Slab({
     add(6.5, 5.8, "fountain", <Fountain />);
   for (const b of buildings) {
     const items = town.items.filter((i) => i.building_id === b.id);
-    const call = dispatch.queue.find((c) => c.building.id === b.id && c.key !== dispatch.extinguished);
+    const call = dispatch.queue.find(
+      (c) => c.building.id === b.id && c.key !== dispatch.extinguished,
+    );
     const actual = buildingHealth(items, now);
     const state = actual === "fire" ? actual : (call?.from ?? actual);
     const suppress =
@@ -259,11 +265,34 @@ function Slab({
           strokeDasharray="3 2"
         />
         <g transform="scale(.82)">
-          <BuildingArt kind={b.kind} boarded={b.boarded} />
+          <BuildingArt
+            kind={b.kind}
+            boarded={
+              b.boarded && !(b.kind === "post-office" && postOfficeConnected)
+            }
+          />
           {/^(hdfc|hdfcbk|hdfc bank)$/i.test(b.entity.trim()) && (
             <g transform="matrix(1 .46 0 1 -30 -25)" aria-hidden="true">
-              <rect width="30" height="10" rx=".8" fill="#264967" stroke="#e4d4ae" strokeWidth=".8" />
-              <text x="15" y="7.9" textAnchor="middle" fill="#fff9ea" fontFamily="Arial, sans-serif" fontSize="8.4" fontWeight="bold" letterSpacing=".6">HDFC</text>
+              <rect
+                width="30"
+                height="10"
+                rx=".8"
+                fill="#264967"
+                stroke="#e4d4ae"
+                strokeWidth=".8"
+              />
+              <text
+                x="15"
+                y="7.9"
+                textAnchor="middle"
+                fill="#fff9ea"
+                fontFamily="Arial, sans-serif"
+                fontSize="8.4"
+                fontWeight="bold"
+                letterSpacing=".6"
+              >
+                HDFC
+              </text>
             </g>
           )}
           {(state === "fire" || state === "smoking") && (
@@ -422,12 +451,20 @@ export function TownMap({
   selected,
   select,
   zoom,
+  desk,
+  landmarks,
+  postOfficeConnected,
+  workerUnread,
 }: {
   town: TownSnapshot;
   now: number;
   selected?: Building["id"];
   select: (id: string) => void;
   zoom: number;
+  desk: Desk;
+  landmarks: ReactNode;
+  postOfficeConnected: boolean;
+  workerUnread: Record<string, number>;
 }) {
   const dispatch = useDispatch(town, now);
   return (
@@ -439,19 +476,44 @@ export function TownMap({
       <g transform={`translate(380 236) scale(${zoom}) translate(-380 -236)`}>
         <FairStyles />
         <Airship />
-        <g transform="translate(623 80)">
+        <g
+          transform="translate(623 80)"
+          className="courier"
+          role="button"
+          tabIndex={0}
+          aria-label="Search the web at Internet island"
+          onClick={() => desk.enter(undefined, true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              desk.enter(undefined, true);
+            }
+          }}
+        >
+          <title>Internet island · Search the web</title>
+          <rect
+            x="-50"
+            y="-40"
+            width="100"
+            height="68"
+            fill="transparent"
+            pointerEvents="all"
+          />
           <CoastalIsland />
+          <IslandReceiver desk={desk} />
         </g>
         <Boulevards />
         {districts.map((d) => (
           <Slab
             key={d}
             district={d}
-            {...{ town, now, selected, select, dispatch }}
+            {...{ town, now, selected, select, dispatch, postOfficeConnected }}
           />
         ))}
+        {landmarks}
         <Streetcar />
         <StationScene call={dispatch.active} />
+        <TownCouriers desk={desk} unread={workerUnread} />
       </g>
     </svg>
   );

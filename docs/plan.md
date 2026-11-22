@@ -4,7 +4,13 @@ Your Gmail, iMessage, Calendar and Drive, drawn as a hand-inked isometric town. 
 
 This is an **interface over OpenMausBot**. We write no agent harness, no tool-calling loop and no extraction pipeline.
 
-## Decisions (settled 2026-11-21)
+## Current direction (2026-11-22)
+
+The first two connected buildings are the Post Office (Gmail) and GitHub HQ. The island uses OpenMausBot’s existing account links, app-event catalog, worker threads and image attachments. Drawably supplies interactive controls. The photo bazaar, temple journal and cricket ground work before connecting an account. The setup and storage details are in the [README](../README.md).
+
+The next proposed milestone uses the same Gmail connection. A keeper can recognize a bill or a promised follow-up, propose a dated item at the right building, and show the source in its thread. The town already has the tools for recording a due date and repairing the building with evidence. Calendar, Drive, iMessage and historical backfill remain later milestones.
+
+## Original decisions (2026-11-21)
 
 | Area | Decision |
 |---|---|

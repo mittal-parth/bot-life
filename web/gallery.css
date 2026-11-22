@@ -1,0 +1,135 @@
+.photo-gallery {
+  position: fixed;
+  inset: auto 18px 18px auto;
+  margin: 0;
+  width: min(440px, calc(100vw - 36px));
+  max-height: min(78dvh, 760px);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.photo-gallery .panel-pages {
+  padding: 18px 20px;
+}
+.photo-gallery::backdrop {
+  background: #483e2910;
+}
+.gallery-bar,
+.gallery-actions,
+.gallery-suggestions > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gallery-bar {
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+.gallery-bar h2 {
+  margin: 0;
+  font-size: 24px;
+}
+.gallery-bar button {
+  font-size: 24px;
+}
+.gallery-actions > span:not(.drawably-host),
+.gallery-local,
+.gallery-suggestions p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.gallery-suggestions button {
+  border: 1px solid #877d66;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.gallery-suggestions button[aria-pressed="true"] {
+  color: #fff9ed;
+  background: #455d4b;
+}
+.photo-gallery button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.gallery-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.gallery-grid button,
+.gallery-print {
+  margin: 0;
+  padding: 5px;
+  background: #fffdf7;
+  border: 1px solid #d7cbb7;
+}
+.gallery-grid img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+.gallery-grid span,
+.gallery-print figcaption {
+  display: block;
+  padding: 3px;
+  overflow-wrap: anywhere;
+  text-align: left;
+  font:
+    14px Georgia,
+    serif;
+}
+.gallery-print img {
+  width: 100%;
+  max-height: 33dvh;
+  object-fit: contain;
+  display: block;
+}
+.gallery-back {
+  padding: 0 0 9px;
+}
+.gallery-note {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+}
+.gallery-note textarea {
+  font: inherit;
+  min-height: 66px;
+  resize: vertical;
+}
+.gallery-empty {
+  border: 1px dashed var(--line);
+  margin-top: 16px;
+  padding: 15px;
+  text-align: center;
+}
+.gallery-empty h3 {
+  margin: 0;
+}
+.gallery-local {
+  margin-bottom: 0;
+}
+.gallery-error {
+  color: #8d3327;
+  overflow-wrap: anywhere;
+}
+.gallery-ask {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.gallery-ask summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.gallery-ask form {
+  margin-top: 12px;
+}
+.gallery-ask p {
+  font-size: 12px;
+  color: var(--muted);
+}
