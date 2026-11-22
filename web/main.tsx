@@ -343,6 +343,36 @@ function App() {
                       <small>
                         {dueLabel(i.due_at)} · {decay(i, now)}
                       </small>
+                      {mode !== "live" && building.district === "money" && (
+                        <button
+                          className="demo-pay"
+                          onClick={() => {
+                            setTown(
+                              (t) =>
+                                t && {
+                                  ...t,
+                                  items: t.items.map((item) =>
+                                    item.id === i.id &&
+                                    item.building_id === building.id
+                                      ? {
+                                          ...item,
+                                          state: "fixed",
+                                          evidence: "Sample payment receipt",
+                                          updated_at: new Date(
+                                            now,
+                                          ).toISOString(),
+                                        }
+                                      : item,
+                                  ),
+                                },
+                            );
+                            closePanel();
+                            setToolsOpen(false);
+                          }}
+                        >
+                          Simulate payment
+                        </button>
+                      )}
                     </div>
                   ))}
                 {!pending.some((i) => i.building_id === building.id) && (

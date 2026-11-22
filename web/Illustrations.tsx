@@ -72,6 +72,7 @@ function Opening({
     <g transform={`translate(${x} ${y})`} strokeWidth=".66">
       <path
         d={arch ? `M0 0v-${h - 2}q${w / 2} -4 ${w} 0V0Z` : `M0 0v-${h}h${w}V0Z`}
+        className="window-glass"
         fill={glass}
       />
       <path

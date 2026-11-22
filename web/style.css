@@ -183,15 +183,6 @@ main {
 .building[aria-pressed="true"] .halo {
   opacity: 1;
 }
-.smoke {
-  animation: drift 3.3s ease-in-out infinite alternate;
-}
-@keyframes drift {
-  to {
-    transform: translate(2px, -2px);
-    opacity: 0.56;
-  }
-}
 .spot {
   width: 8px;
   height: 8px;
@@ -380,11 +371,6 @@ hr {
     max-height: 52%;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .smoke {
-    animation: none;
-  }
-}
 
 /* Routes are animated inside their fixed isometric anchor. */
 .tram-run {
@@ -433,5 +419,127 @@ hr {
 @media (prefers-reduced-motion: reduce) {
   .town-map * {
     animation-play-state: paused !important;
+  }
+}
+
+.mapfield {
+  background: #f6f2e7 url("./assets/paper.png") repeat;
+}
+.fire-tongue {
+  transform-origin: 0 0;
+  animation: flame-dance 1.05s ease-in-out infinite alternate;
+}
+@keyframes flame-dance {
+  0% {
+    transform: skewX(-9deg) scale(0.91, 0.65);
+  }
+  28% {
+    transform: skewX(5deg) scale(1.06, 0.96);
+  }
+  55% {
+    transform: skewX(-4deg) scale(0.86, 1.17);
+  }
+  80% {
+    transform: skewX(12deg) scale(1.08, 0.81);
+  }
+  100% {
+    transform: skewX(4deg) scale(0.96, 1.03);
+  }
+}
+.building[data-health="fire"] .window-glass {
+  fill: #ecac57;
+  animation: window-heat 2s ease-in-out infinite alternate;
+}
+@keyframes window-heat {
+  to {
+    fill: #c26a3d;
+  }
+}
+.rising-soot {
+  animation: plume-rise 4.2s ease-out infinite;
+  opacity: 0.35;
+}
+@keyframes plume-rise {
+  0% {
+    transform: translate(0, 0) scale(0.28);
+    opacity: 0;
+  }
+  16% {
+    opacity: 0.45;
+  }
+  58% {
+    opacity: 0.31;
+  }
+  100% {
+    transform: translate(var(--drift), -43px) scale(1.42);
+    opacity: 0;
+  }
+}
+.fire-ember {
+  animation: ember-rise 2.5s ease-out infinite;
+}
+@keyframes ember-rise {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.93;
+  }
+  100% {
+    transform: translate(8px, -30px);
+    opacity: 0;
+  }
+}
+.lane-car {
+  offset-rotate: auto;
+  animation: flower-lane-trip 22s linear infinite;
+}
+@keyframes flower-lane-trip {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  4%,
+  96% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.demo-pay {
+  margin: 10px 0 2px;
+  padding: 7px 12px;
+  border: 1px solid #6f7865;
+  border-radius: 3px;
+  background: #e6eadb;
+  color: #344535;
+  font-weight: 600;
+}
+.brigade-extinguish {
+  animation: brigade-quench linear both;
+}
+@keyframes brigade-quench {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.brigade-spray {
+  animation: hose-spray 0.42s linear infinite;
+}
+@keyframes hose-spray {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .town-map .brigade-extinguish {
+    animation-play-state: running !important;
+    animation-timing-function: steps(1, end);
   }
 }

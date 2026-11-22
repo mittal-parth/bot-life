@@ -13,6 +13,12 @@ import {
 } from "./StreetLife.tsx";
 import { FerrisWheel, MarketStall, FairStyles } from "./Fairground.tsx";
 import { Windmill, FlowerBed, Bandstand, Bench } from "./GardenArt.tsx";
+import { BuildingFire } from "./BuildingFire.tsx";
+import { FlowerLane } from "./FlowerLane.tsx";
+import { planResponse, origins } from "./dispatchRoute.ts";
+import { StationScene, useDispatch } from "./FireBrigade.tsx";
+import CoastalIsland from "./CoastalIsland.tsx";
+import { PicnicGrove, LanternGate } from "./Picnic.tsx";
 import { Harbor } from "./Harbor.tsx";
 
 export const districts: District[] = ["work", "money", "people", "paperwork"];
@@ -21,12 +27,6 @@ export const colors = {
   money: "#72a78c",
   people: "#cf8d88",
   paperwork: "#9c92b8",
-};
-const origins = {
-  work: [380, 82],
-  money: [202, 173],
-  people: [558, 173],
-  paperwork: [380, 264],
 };
 const terrain = {
   work: "#d5d6b7",
@@ -72,24 +72,6 @@ function Lamp() {
   );
 }
 function Overlay({ state }: { state: Health }) {
-  if (state === "smoking" || state === "fire")
-    return (
-      <g pointerEvents="none">
-        <g className="smoke" fill="#77796f" opacity=".63">
-          <circle cx="9" cy="-50" r="5" />
-          <circle cx="11" cy="-59" r="7" />
-          <circle cx="16" cy="-69" r="8" />
-          <circle cx="22" cy="-81" r="6" opacity=".6" />
-        </g>
-        {state === "fire" && (
-          <path
-            d="M4 -34 Q-3 -40 5 -48 Q4 -42 8 -44 Q7 -52 13 -57 Q10 -48 15 -46 Q20 -50 18 -52 Q23 -39 14 -33Z"
-            fill="#e47d45"
-            stroke="#ae583a"
-          />
-        )}
-      </g>
-    );
   if (state === "cracked")
     return (
       <path
@@ -130,12 +112,14 @@ const positions = [
   [2.7, 6.8],
 ];
 function Slab({
+  dispatch,
   district,
   town,
   now,
   selected,
   select,
 }: {
+  dispatch: ReturnType<typeof useDispatch>;
   district: District;
   town: TownSnapshot;
   now: number;
@@ -160,6 +144,7 @@ function Slab({
   if (district === "people")
     decor.push(
       [6.8, 2.7, <FerrisWheel />],
+      [0.95, 3.35, <PicnicGrove />],
       [1.6, 6.8, <MarketStall color="#cf6646" />],
       [3.1, 7.1, <MarketStall color="#e3b449" />],
       [2.4, 7.7, <Bunting />],
@@ -181,7 +166,7 @@ function Slab({
     decor.push(
       [1.8, 6.9, <Windmill />],
       [3.5, 7.6, <FlowerBed />],
-      [6.8, 2.6, <Bandstand />],
+      [6.8, 2.6, <LanternGate />],
       [7.5, 6.4, <FlowerBed />],
     );
   const placed = decor.filter(([u, v]) => free(u, v));
@@ -229,7 +214,13 @@ function Slab({
     add(6.5, 5.8, "fountain", <Fountain />);
   for (const b of buildings) {
     const items = town.items.filter((i) => i.building_id === b.id);
-    const state = buildingHealth(items, now);
+    const call = dispatch.queue.find((c) => c.building.id === b.id && c.key !== dispatch.extinguished);
+    const actual = buildingHealth(items, now);
+    const state = actual === "fire" ? actual : (call?.from ?? actual);
+    const suppress =
+      call && call === dispatch.active && actual !== "fire"
+        ? planResponse(b)
+        : undefined;
     const keeper = town.positions
       .filter((p) => p.building_id === b.id)
       .map((p) => p.bot)
@@ -244,6 +235,7 @@ function Slab({
         aria-label={b.entity + " · " + district}
         aria-pressed={selected === b.id}
         className="building"
+        data-health={state}
         onClick={() => select(b.id)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -268,6 +260,37 @@ function Slab({
         />
         <g transform="scale(.82)">
           <BuildingArt kind={b.kind} boarded={b.boarded} />
+          {/^(hdfc|hdfcbk|hdfc bank)$/i.test(b.entity.trim()) && (
+            <g transform="matrix(1 .46 0 1 -30 -25)" aria-hidden="true">
+              <rect width="30" height="10" rx=".8" fill="#264967" stroke="#e4d4ae" strokeWidth=".8" />
+              <text x="15" y="7.9" textAnchor="middle" fill="#fff9ea" fontFamily="Arial, sans-serif" fontSize="8.4" fontWeight="bold" letterSpacing=".6">HDFC</text>
+            </g>
+          )}
+          {(state === "fire" || state === "smoking") && (
+            <g
+              key={call?.key ?? "incident"}
+              style={
+                suppress && {
+                  animationDelay: suppress.water + "ms",
+                  animationDuration: suppress.dry - suppress.water + "ms",
+                }
+              }
+              className={suppress ? "brigade-extinguish" : undefined}
+            >
+              <BuildingFire
+                kind={b.kind}
+                burning={state === "fire"}
+                seed={b.plot.x * 8 + b.plot.y}
+              />
+            </g>
+          )}
+          {call && actual === "smoking" && state === "fire" && (
+            <BuildingFire
+              kind={b.kind}
+              burning={false}
+              seed={b.plot.x * 8 + b.plot.y}
+            />
+          )}
           <Overlay state={state} />
         </g>
         {keeper && (
@@ -287,6 +310,7 @@ function Slab({
         fill="#b2a994"
         opacity=".2"
       />
+      {district === "people" && <FlowerLane />}
       <path d="M-162 81 0 162v6l-162 -81z" fill="#c5bba6" stroke={ink} />
       <path d="m0 162 162 -81v6L0 168z" fill="#b8af9b" stroke={ink} />
       <polygon
@@ -405,6 +429,7 @@ export function TownMap({
   select: (id: string) => void;
   zoom: number;
 }) {
+  const dispatch = useDispatch(town, now);
   return (
     <svg
       className="town-map"
@@ -414,46 +439,19 @@ export function TownMap({
       <g transform={`translate(380 236) scale(${zoom}) translate(-380 -236)`}>
         <FairStyles />
         <Airship />
+        <g transform="translate(623 80)">
+          <CoastalIsland />
+        </g>
         <Boulevards />
         {districts.map((d) => (
-          <Slab key={d} district={d} {...{ town, now, selected, select }} />
+          <Slab
+            key={d}
+            district={d}
+            {...{ town, now, selected, select, dispatch }}
+          />
         ))}
         <Streetcar />
-        {(
-          [
-            ["Work", 425, 48],
-            ["Money", 111, 135],
-            ["People", 649, 135],
-            ["Paperwork", 380, 453],
-          ] as const
-        ).map(([label, x, y]) => (
-          <g
-            key={label}
-            transform={`translate(${x} ${y})`}
-            pointerEvents="none"
-          >
-            <rect
-              x="-47"
-              y="-9"
-              width="94"
-              height="18"
-              rx="9"
-              fill="#f5f1e6"
-              stroke="#b5ad97"
-              strokeWidth=".7"
-            />
-            <text
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontFamily="Georgia, serif"
-              fontStyle="italic"
-              fontSize="13"
-              fill={ink}
-            >
-              {label}
-            </text>
-          </g>
-        ))}
+        <StationScene call={dispatch.active} />
       </g>
     </svg>
   );
